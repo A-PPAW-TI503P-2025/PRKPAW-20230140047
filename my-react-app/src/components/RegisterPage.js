@@ -1,129 +1,175 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom'; // Import Link
+import React, { useState } from "react";
+import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
 
 function RegisterPage() {
-  const [nama, setNama] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState('mahasiswa'); // Default value
+  const [formData, setFormData] = useState({
+    nama: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    role: "mahasiswa",
+  });
+
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
+
+  const handleChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-    try {
-      // Kirim data ke endpoint register [cite: 199]
-      await axios.post('http://localhost:3001/api/auth/register', {
-        nama: nama,
-        email: email,
-        password: password,
-        role: role
-      });
-      
-      // Arahkan ke halaman login setelah berhasil [cite: 200]
-      navigate('/login');
+    setSuccess(false);
 
+    if (formData.password !== formData.confirmPassword) {
+      setError("Password dan konfirmasi password tidak sama.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      await axios.post("http://localhost:3001/api/auth/register", formData);
+
+      setSuccess(true);
+      setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
-      setError(err.response ? err.response.data.message : 'Registrasi gagal');
+      setError(err.response?.data?.message || "Terjadi kesalahan.");
+    } finally {
+      setLoading(false);
     }
   };
 
+  const inputClass =
+    "w-full mt-1 px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400";
+
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-4">
+      <div className="bg-white w-full max-w-md p-8 rounded-2xl shadow-lg">
+
+        <h1 className="text-3xl font-bold text-center text-gray-800 mb-1">
           Register
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Input untuk Nama */}
+        </h1>
+        <p className="text-center text-gray-600 mb-6">
+          Buat akun baru Anda
+        </p>
+
+        {success && (
+          <div className="mb-4 p-3 bg-green-100 text-green-800 border border-green-300 rounded-lg text-sm">
+            Registrasi Berhasil! Mengarahkan...
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 text-red-800 border border-red-300 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
+
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          {/* Nama */}
           <div>
-            <label
-              htmlFor="nama"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Nama:
-            </label>
+            <label className="text-sm font-medium text-gray-700">Nama Lengkap</label>
             <input
-              id="nama"
               type="text"
-              value={nama}
-              onChange={(e) => setNama(e.target.value)}
+              name="nama"
+              placeholder="Nama lengkap"
+              value={formData.nama}
+              onChange={handleChange}
+              className={inputClass}
               required
-              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
-          {/* Input untuk Email */}
+          {/* Email */}
           <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Email:
-            </label>
+            <label className="text-sm font-medium text-gray-700">Email</label>
             <input
-              id="email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              name="email"
+              placeholder="email@example.com"
+              value={formData.email}
+              onChange={handleChange}
+              className={inputClass}
               required
-              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
-          {/* Input untuk Password */}
+          {/* Role */}
           <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Password:
-            </label>
+            <label className="text-sm font-medium text-gray-700">Daftar sebagai</label>
+            <div className="flex gap-4 mt-1 text-sm">
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="role"
+                  value="mahasiswa"
+                  checked={formData.role === "mahasiswa"}
+                  onChange={handleChange}
+                />
+                Mahasiswa
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="role"
+                  value="admin"
+                  checked={formData.role === "admin"}
+                  onChange={handleChange}
+                />
+                Admin
+              </label>
+
+            </div>
+          </div>
+
+          {/* Password */}
+          <div>
+            <label className="text-sm font-medium text-gray-700">Password</label>
             <input
-              id="password"
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              name="password"
+              placeholder="Minimal 6 karakter"
+              value={formData.password}
+              onChange={handleChange}
+              className={inputClass}
               required
-              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
-          {/* Input untuk Role [cite: 198] */}
+          {/* Confirm Password */}
           <div>
-            <label
-              htmlFor="role"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Role:
-            </label>
-            <select
-              id="role"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="mahasiswa">Mahasiswa</option>
-              <option value="admin">Admin</option>
-            </select>
+            <label className="text-sm font-medium text-gray-700">Konfirmasi Password</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              placeholder="Ulangi password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className={inputClass}
+              required
+            />
           </div>
 
+          {/* Submit */}
           <button
             type="submit"
-            className="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700"
+            disabled={loading}
+            className="w-full py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition disabled:opacity-50"
           >
-            Register
+            {loading ? "Memproses..." : "Daftar"}
           </button>
         </form>
-        {error && (
-          <p className="text-red-600 text-sm mt-4 text-center">{error}</p>
-        )}
-        <p className="text-sm text-center mt-4">
-          Sudah punya akun?{' '}
-          <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
-            Login di sini
+
+        <p className="text-center text-gray-600 text-sm mt-6">
+          Sudah punya akun?
+          <Link to="/login" className="text-indigo-600 ml-1 font-semibold hover:underline">
+            Masuk
           </Link>
         </p>
       </div>

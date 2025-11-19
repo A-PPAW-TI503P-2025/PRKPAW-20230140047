@@ -1,79 +1,115 @@
 // src/components/LoginPage.js
-import React, { useState } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import axios from "axios";
+import { useNavigate, Link } from "react-router-dom";
 
 function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    setLoading(true);
+
     try {
-      // Panggilan API ke backend Node.js
-      const response = await axios.post('http://localhost:3001/api/auth/login', {
-        email: email,
-        password: password
-      });
-      
-      const token = response.data.token;
-      localStorage.setItem('token', token); // Simpan token
-      navigate('/dashboard'); // Arahkan ke Dashboard
-      
+      const response = await axios.post(
+        "http://localhost:3001/api/auth/login",
+        { email, password }
+      );
+      localStorage.setItem("token", response.data.token);
+      navigate("/dashboard");
     } catch (err) {
-      // Tangani error dari server
-      setError(err.response ? err.response.data.message : 'Login gagal');
+      setError(
+        err.response ? err.response.data.message : "Login gagal, coba lagi."
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">
-          Login
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Input Email */}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-4">
+      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl">
+
+        {/* Header */}
+        <div className="text-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-800">Login</h1>
+          <p className="text-gray-600 mt-1">Masuk ke akun Anda</p>
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 rounded">
+            <p className="text-red-700 text-sm">{error}</p>
+          </div>
+        )}
+
+        {/* Form */}
+        <form className="space-y-5" onSubmit={handleSubmit}>
+
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email:</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Email
+            </label>
             <input
-              id="email"
               type="email"
+              className="w-full mt-1 px-4 py-3 border rounded-lg bg-gray-50 focus:outline-none focus:border-indigo-500"
+              placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          {/* Input Password */}
+
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password:</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
+            <label className="block text-sm font-medium text-gray-700">
+              Password
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                className="w-full mt-1 px-4 py-3 border rounded-lg bg-gray-50 focus:outline-none focus:border-indigo-500"
+                placeholder="Masukkan password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-3 flex items-center text-gray-500"
+              >
+                {showPassword ? "🙈" : "👁️"}
+              </button>
+            </div>
           </div>
-          {/* Tombol Login */}
+
           <button
             type="submit"
-            className="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700"
+            disabled={loading}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition disabled:opacity-50"
           >
-            Login
+            {loading ? "Memproses..." : "Masuk"}
           </button>
         </form>
-        {/* Tampilkan Error */}
-        {error && (
-          <p className="text-red-600 text-sm mt-4 text-center">{error}</p>
-        )}
+
+        <p className="text-center text-gray-600 text-sm mt-6">
+          Belum punya akun?{" "}
+          <Link
+            to="/register"
+            className="text-indigo-600 font-semibold hover:underline"
+          >
+            Daftar
+          </Link>
+        </p>
       </div>
     </div>
   );
 }
+
 export default LoginPage;
