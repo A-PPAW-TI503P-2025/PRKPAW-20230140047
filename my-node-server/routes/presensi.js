@@ -5,9 +5,22 @@ const presensiController = require('../controllers/presensiController');
 const { authenticateToken, isAdmin } = require('../middleware/permissionMiddleware');
 const { body, validationResult } = require('express-validator');
 
+// =========================
+// ROUTES UNTUK PRESENSI
+// =========================
+
+// Semua endpoint presensi wajib login (token)
 router.use(authenticateToken);
-router.post('/check-in', presensiController.CheckIn);
+
+// CHECK-IN
+router.post('/check-in', 
+  [authenticateToken, presensiController.upload.single("image")],
+  presensiController.CheckIn);
+
+// CHECK-OUT
 router.post('/check-out', presensiController.CheckOut);
+
+// UPDATE PRESENSI
 router.put(
   '/:id',
   [
@@ -33,6 +46,7 @@ router.put(
   presensiController.updatePresensi
 );
 
+// DELETE PRESENSI
 router.delete('/:id', presensiController.deletePresensi);
 
 module.exports = router;
